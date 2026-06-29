@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Scan an OKF directory and print a compact concept index to stdout."""
+"""Scan project root for OKF concepts (any .md with type: frontmatter) and print a compact index."""
 import sys
 import os
 import re
 import json
+
+SKIP_DIRS = {
+    'node_modules', '.git', '.cache', 'vendor', 'dist', 'build',
+    '__pycache__', '.venv', 'venv', '.tox', 'coverage', '.nyc_output',
+    'target', '.gradle', 'Pods', '.dart_tool', '.flutter-plugins',
+}
 
 
 def parse_frontmatter(content):
@@ -19,10 +25,9 @@ def parse_frontmatter(content):
 
 
 def body_excerpt(content, fm_end):
-    """First sentence from body when description field is missing."""
     body = content[fm_end:].strip()
     body = re.sub(r'^#+[^\n]+\n', '', body, flags=re.MULTILINE).strip()
-    body = re.sub(r'^\|.+', '', body, flags=re.MULTILINE).strip()  # skip tables
+    body = re.sub(r'^\|.+', '', body, flags=re.MULTILINE).strip()
     m = re.match(r'([^.\n!?]{10,}[.!?])', body)
     if m:
         return m.group(1).strip()[:100]
@@ -31,7 +36,6 @@ def body_excerpt(content, fm_end):
 
 
 def last_log_entries(log_path, n=3):
-    """Last n non-empty, non-heading lines from log.md body."""
     try:
         with open(log_path, encoding='utf-8', errors='replace') as f:
             content = f.read()
@@ -52,29 +56,30 @@ def load_config(project_root):
 
 
 def main():
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         sys.exit(1)
 
-    okf_dir = sys.argv[1]
-    okf_name = sys.argv[2]
-    project_root = sys.argv[3] if len(sys.argv) > 3 else os.path.dirname(okf_dir)
-
+    project_root = sys.argv[1]
     cfg = load_config(project_root)
     max_concepts = int(cfg.get('maxConcepts', 60))
     priority_types = cfg.get('priorityTypes', [])
+    extra_skip = set(cfg.get('exclude', []))
+    skip = SKIP_DIRS | extra_skip
 
     concepts = []
     log_entries = []
 
-    for root, dirs, files in os.walk(okf_dir):
-        dirs.sort()
+    for root, dirs, files in os.walk(project_root):
+        # prune skip dirs in-place
+        dirs[:] = sorted(d for d in dirs if d not in skip and not d.startswith('.cache'))
+
         for fname in sorted(files):
             if not fname.endswith('.md'):
                 continue
             fpath = os.path.join(root, fname)
-            rel = os.path.relpath(fpath, okf_dir)
+            rel = os.path.relpath(fpath, project_root)
 
-            if fname == 'log.md':
+            if fname == 'log.md' and not log_entries:
                 log_entries = last_log_entries(fpath)
                 continue
 
@@ -99,8 +104,8 @@ def main():
 
     count = len(concepts)
     lines = [
-        f"Lore: ./{okf_name}/ ({count} concept{'s' if count != 1 else ''})",
-        "Read index.md first, then follow links.",
+        f"Knowledge: {count} documented concept{'s' if count != 1 else ''} found in project",
+        "Concepts with `type:` frontmatter — read any file for full details.",
     ]
 
     if log_entries:
@@ -113,7 +118,7 @@ def main():
         lines.append(f"  {c['path']}{typ}{desc}")
 
     if count > max_concepts:
-        lines.append(f"  ... +{count - max_concepts} more (see index.md)")
+        lines.append(f"  ... +{count - max_concepts} more")
 
     print('\n'.join(lines))
 

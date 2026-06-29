@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# SessionStart hook — scans project for OKF knowledge base and injects index as context.
+# SessionStart hook — scans project for OKF concepts (any .md with type: frontmatter)
+# and injects a compact knowledge index into session context.
 
 set -euo pipefail
 
@@ -7,40 +8,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 
-# Check .mega-brain.json for a custom dir override
-CUSTOM_DIR=$(python3 -c "
-import json, sys
-try:
-    c = json.load(open('${PROJECT_ROOT}/.mega-brain.json'))
-    print(c.get('dir', ''))
-except Exception:
-    print('')
-" 2>/dev/null || true)
-
-OKF_DIR=""
-OKF_NAME=""
-
-if [ -n "${CUSTOM_DIR}" ] && [ -d "${PROJECT_ROOT}/${CUSTOM_DIR}" ]; then
-    OKF_DIR="${PROJECT_ROOT}/${CUSTOM_DIR}"
-    OKF_NAME="${CUSTOM_DIR}"
-else
-    for candidate in "okf" ".okf" "knowledge" "brain" ".second-brain"; do
-        if [ -d "${PROJECT_ROOT}/${candidate}" ]; then
-            OKF_DIR="${PROJECT_ROOT}/${candidate}"
-            OKF_NAME="${candidate}"
-            break
-        fi
-    done
-fi
-
-# No OKF dir found — silent exit
-if [ -z "${OKF_DIR}" ]; then
+# Build knowledge index from project root
+CONTEXT=$(python3 "${PLUGIN_ROOT}/scripts/parse-okf.py" "${PROJECT_ROOT}" 2>/dev/null) || {
     printf '{"continue": true, "suppressOutput": true}\n'
     exit 0
-fi
+}
 
-# Parse OKF and build compact index
-CONTEXT=$(python3 "${PLUGIN_ROOT}/scripts/parse-okf.py" "${OKF_DIR}" "${OKF_NAME}" "${PROJECT_ROOT}" 2>/dev/null) || {
+# If no concepts found, exit silently
+echo "${CONTEXT}" | grep -q "^Knowledge: 0 " && {
     printf '{"continue": true, "suppressOutput": true}\n'
     exit 0
 }

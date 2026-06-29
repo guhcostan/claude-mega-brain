@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-PostToolUse(Read) hook — when Claude reads an OKF file, inject its linked concepts.
-Receives tool call JSON via stdin, outputs additionalContext JSON.
+PostToolUse(Read) hook — when Claude reads a file with OKF frontmatter,
+inject its linked concepts. Receives tool call JSON via stdin.
 """
 import sys
 import os
@@ -9,8 +9,6 @@ import re
 import json
 
 SILENT = '{"continue": true}'
-
-OKF_CANDIDATES = ('okf', '.okf', 'knowledge', 'brain', '.second-brain')
 
 
 def parse_frontmatter(content):
@@ -25,13 +23,10 @@ def parse_frontmatter(content):
     return fm
 
 
-def find_okf_dir(file_path, project_root):
-    abs_file = os.path.realpath(file_path)
-    for name in OKF_CANDIDATES:
-        okf_dir = os.path.realpath(os.path.join(project_root, name))
-        if abs_file.startswith(okf_dir + os.sep):
-            return okf_dir, name
-    return None, None
+def is_okf_file(content):
+    """File qualifies as OKF if it has type: in frontmatter."""
+    fm = parse_frontmatter(content)
+    return bool(fm.get('type'))
 
 
 def extract_md_links(content, base_dir):
@@ -43,7 +38,7 @@ def extract_md_links(content, base_dir):
         abs_path = os.path.realpath(os.path.join(base_dir, href))
         if os.path.isfile(abs_path):
             result.append(abs_path)
-    return result[:10]  # ponytail: cap at 10 to stay fast
+    return result[:10]
 
 
 def emit(context):
@@ -74,12 +69,6 @@ def main():
         print(SILENT)
         return
 
-    project_root = os.getcwd()
-    okf_dir, _ = find_okf_dir(file_path, project_root)
-    if not okf_dir:
-        print(SILENT)
-        return
-
     try:
         with open(file_path, encoding='utf-8', errors='replace') as f:
             content = f.read(8000)
@@ -87,19 +76,27 @@ def main():
         print(SILENT)
         return
 
-    linked_paths = extract_md_links(content, os.path.dirname(os.path.abspath(file_path)))
+    # Only inject for files that are OKF concepts themselves
+    if not is_okf_file(content):
+        print(SILENT)
+        return
+
+    linked_paths = extract_md_links(content, os.path.dirname(os.path.realpath(file_path)))
     if not linked_paths:
         print(SILENT)
         return
 
+    project_root = os.getcwd()
     lines = ["Linked concepts:"]
     for abs_path in linked_paths:
         try:
             with open(abs_path, encoding='utf-8', errors='replace') as f:
                 linked_content = f.read(2000)
             fm = parse_frontmatter(linked_content)
-            rel = os.path.relpath(abs_path, okf_dir)
-            typ = f" [{fm['type']}]" if fm.get('type') else ''
+            if not fm.get('type'):
+                continue
+            rel = os.path.relpath(abs_path, project_root)
+            typ = f" [{fm['type']}]"
             desc = f" — {fm.get('description', '')[:80]}" if fm.get('description') else ''
             lines.append(f"  {rel}{typ}{desc}")
         except Exception:

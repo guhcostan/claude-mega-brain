@@ -52,16 +52,17 @@ With claude-mega-brain, the exact schema is injected at `SessionStart`:
 
 ```
 <mega-brain>
-OKF: ./okf/ (4 concepts)
-  tables/orders.md   [BigQuery Table] — amount_cents INT64, status STRING(pending/confirmed/shipped/done)
-  tables/customers.md [BigQuery Table] — customer_id STRING, email STRING
-  metrics/wau.md     [Metric]         — COUNT(DISTINCT user_id) WHERE session_date >= CURRENT_DATE-7
-  metrics/net_revenue.md [Metric]     — SUM(amount_cents - refund_cents)/100 WHERE status='done'
+Knowledge: 4 documented concepts found in project
+
+  docs/orders.md     [BigQuery Table] — amount_cents INT64, status STRING(pending/confirmed/shipped/done)
+  docs/customers.md  [BigQuery Table] — customer_id STRING, email STRING
+  docs/wau.md        [Metric]         — COUNT(DISTINCT user_id) WHERE session_date >= CURRENT_DATE-7
+  docs/net_revenue.md [Metric]        — SUM(amount_cents - refund_cents)/100 WHERE status='done'
 </mega-brain>
 
 User: What column stores the order total?
 
-Claude: amount_cents (INT64) — from tables/orders.md
+Claude: amount_cents (INT64) — from docs/orders.md
 # Correct. 0 tool calls. First turn.
 ```
 
@@ -89,27 +90,26 @@ Obsidian+MCP makes 4 tool calls per question, reads the vault, and still misses 
 
 ## How it works
 
-At `SessionStart`, a hook scans the project for an OKF knowledge base and injects a compact index:
+At `SessionStart`, a hook scans the entire project for any `.md` file with `type:` in its YAML frontmatter and injects a compact index:
 
 ```
 <mega-brain>
-OKF: ./okf/ (8 concepts)
-Read index.md first, then follow links.
+Knowledge: 8 documented concepts found in project
 
 Recent (log.md):
   2026-06-29 — added customers table
 
   index.md            [Index]         — Central reference for all sales data
-  tables/orders.md    [BigQuery Table] — One row per completed order
-  tables/customers.md [BigQuery Table] — Customer profiles
-  metrics/wau.md      [Metric]         — Weekly active users
+  docs/orders.md      [BigQuery Table] — One row per completed order
+  docs/customers.md   [BigQuery Table] — Customer profiles
+  docs/wau.md         [Metric]         — Weekly active users
   ...
 </mega-brain>
 ```
 
-When Claude reads an OKF file, linked concepts surface automatically via `PostToolUse` — no extra prompting needed.
+No dedicated folder needed — documents can live anywhere in the project. When Claude reads an OKF file, linked concepts surface automatically via `PostToolUse`.
 
-**Zero overhead when not in use** — if no OKF dir exists, the hook exits in <5ms with no context injected.
+**Zero overhead when not in use** — if no documented concepts are found, the hook exits in <5ms.
 
 ---
 
@@ -127,7 +127,7 @@ When Claude reads an OKF file, linked concepts surface automatically via `PostTo
 
 ## OKF Format
 
-Each concept is a Markdown file with YAML frontmatter. Only `type` is required:
+Any `.md` file in the project with `type:` in its YAML frontmatter is automatically picked up. No dedicated folder needed.
 
 ```markdown
 ---
@@ -148,15 +148,15 @@ timestamp: 2026-06-29T00:00:00Z
 | status      | STRING    | pending/confirmed/shipped/done |
 
 # Joins
-Joined with [customers](../tables/customers.md) on `customer_id`.
+Joined with [customers](customers.md) on `customer_id`.
 ```
 
 ### Reserved files
 
 | File | Purpose |
 |------|---------|
-| `index.md` | Full knowledge map — Claude reads this first |
-| `log.md` | Append-only changelog — last 3 entries injected at session start |
+| `index.md` (with `type: Index`) | Knowledge map — Claude reads this first |
+| `log.md` (with `type: Log`) | Append-only changelog — last 3 entries injected at session start |
 
 ### Common types
 
@@ -174,7 +174,7 @@ Types are freeform — add your own.
 /mega-brain:init
 ```
 
-Creates `okf/index.md` and `okf/log.md`. Start a new session — context injects automatically.
+Creates `index.md` and `log.md` anywhere you want. Start a new session — context injects automatically.
 
 ### Migrate existing docs
 
@@ -182,7 +182,7 @@ Creates `okf/index.md` and `okf/log.md`. Start a new session — context injects
 /mega-brain:migrate
 ```
 
-Scans `openapi.yaml`, `schema.prisma`, `schema.sql`, `docs/`, `README` sections and generates OKF files.
+Scans `openapi.yaml`, `schema.prisma`, `schema.sql`, `docs/`, `README` sections and adds `type:` frontmatter to generate OKF concepts.
 
 ### Add a single concept
 
@@ -190,16 +190,7 @@ Scans `openapi.yaml`, `schema.prisma`, `schema.sql`, `docs/`, `README` sections 
 /mega-brain:ingest
 ```
 
-Document a specific table, metric, API, or service from a schema dump, description, or URL.
-
-### OKF directory names (first match wins)
-
-| Name | Use when |
-|------|----------|
-| `okf/` | explicit, standard |
-| `.okf/` | hidden, keeps root clean |
-| `knowledge/` | generic |
-| `brain/` | short |
+Document a specific table, metric, API, or service. Saves the file wherever makes sense for your project structure.
 
 ---
 
@@ -234,9 +225,9 @@ Optional per-project overrides:
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `dir` | auto-detect | Custom OKF directory name |
 | `maxConcepts` | `60` | Max concepts in injected index |
 | `priorityTypes` | `[]` | Types shown at top of index |
+| `exclude` | `[]` | Additional dirs to skip when scanning |
 
 ---
 
