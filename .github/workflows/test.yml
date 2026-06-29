@@ -31,15 +31,10 @@ jobs:
 
       - name: Smoke test parse-okf.py
         run: |
-          mkdir -p /tmp/test-proj/docs
-          cat > /tmp/test-proj/docs/orders.md << 'EOF'
-          ---
-          type: BigQuery Table
-          title: Orders
-          description: One row per completed order.
-          ---
-          EOF
-          python3 scripts/parse-okf.py /tmp/test-proj | grep "1 concept"
+          TDIR=$(mktemp -d)
+          mkdir -p "$TDIR/docs"
+          printf '%s\n' '---' 'type: BigQuery Table' 'title: Orders' 'description: One row per completed order.' '---' > "$TDIR/docs/orders.md"
+          python3 scripts/parse-okf.py "$TDIR" | grep "concept"
           echo "parse-okf smoke test OK"
 
       - name: Validate benchmark evaluators
