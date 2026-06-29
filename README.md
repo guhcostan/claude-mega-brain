@@ -13,7 +13,7 @@
 
 **67% → 100% accuracy · 0 tool calls · -91% tokens vs Obsidian+MCP**
 
-Real agentic sessions (`claude -p`), Claude Sonnet 4.6.
+Real agentic sessions (`claude -p`).
 
 </div>
 
@@ -83,7 +83,7 @@ Real `claude -p` agentic sessions — not simulated.
 
 Obsidian+MCP makes 4 tool calls per question exploring the vault and still gets the answer wrong — the notes lack exact schema values. claude-mega-brain injects the structured OKF index once at `SessionStart` and answers in a single turn.
 
-Model: Claude Sonnet 4.6. [Full results](benchmarks/results/agentic-obsidian-vs-mega-brain.md) · [Reproduce](benchmarks/)
+[Full results](benchmarks/results/agentic-obsidian-vs-mega-brain.md) · [Reproduce](benchmarks/)
 
 ## How it compares
 
