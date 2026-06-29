@@ -1,70 +1,73 @@
 ---
 name: init
-description: Initialize an OKF knowledge base in the current project. Use when the user wants to set up claude-mega-brain for the first time, when there is no okf/ directory yet, or when the user says "init mega brain", "create the knowledge base", "setup okf", or "inicializar o mega brain".
+description: Initialize an OKF knowledge base in the current project. Use when there is no okf/ directory yet and the user wants to start using claude-mega-brain, or when the user says "init mega brain", "setup the knowledge base", "cria o okf", "inicializa o mega brain", "quero usar o mega brain", "setup okf", "criar a estrutura do knowledge base", or asks how to get started with the plugin.
 ---
 
-# mega-brain-init — Initialize OKF Knowledge Base
+# init — Initialize OKF Knowledge Base
 
-Creates the `okf/` directory with a ready-to-use structure so claude-mega-brain can start injecting context at the next session.
+Creates the `okf/` directory with a minimal ready-to-use structure so claude-mega-brain can start injecting context at the next session start.
 
 ## Steps
 
-1. Check if an OKF directory already exists (`okf/`, `.okf/`, `knowledge/`, `brain/`). If yes, tell the user and stop — do not overwrite.
+### 1. Check for existing OKF dir
 
-2. Detect the project type from existing files:
-   - `package.json` → Node/TypeScript project
-   - `pyproject.toml` / `setup.py` → Python project
-   - `go.mod` → Go project
-   - `pom.xml` / `build.gradle` → Java/Kotlin project
-   - `Gemfile` → Ruby project
-   - Generic fallback if none found
+Look for `okf/`, `.okf/`, `knowledge/`, `brain/` in the project root. If any exists, stop and tell the user — do not overwrite.
 
-3. Create this structure:
+### 2. Detect project type
+
+Peek at root files to personalize the template:
+- `package.json` → Node/TypeScript
+- `pyproject.toml` or `setup.py` → Python
+- `go.mod` → Go
+- `pom.xml` or `build.gradle` → Java/Kotlin
+- `Gemfile` → Ruby
+- Generic fallback otherwise
+
+### 3. Create the structure
 
 ```
 okf/
-├── index.md          ← knowledge map
-└── log.md            ← changelog
+├── index.md    ← knowledge map (start here every session)
+└── log.md      ← append-only changelog
 ```
 
-4. Write `okf/index.md`:
+### 4. Write `okf/index.md`
 
 ```markdown
 ---
 type: Index
 title: <Project Name> Knowledge Base
 description: Central reference for all project knowledge.
-timestamp: <ISO date>
+timestamp: <today ISO 8601>
 ---
 
 # <Project Name> Knowledge Base
 
-Add concepts here as you document them:
-
 ## Tables / Data
-<!-- Add links to tables/: [orders](tables/orders.md) -->
+<!-- [orders](tables/orders.md) — one-liner -->
 
 ## Metrics
-<!-- Add links to metrics/: [wau](metrics/wau.md) -->
+<!-- [wau](metrics/wau.md) — one-liner -->
 
 ## APIs
-<!-- Add links to apis/: [auth](apis/auth.md) -->
+<!-- [auth](apis/auth.md) — one-liner -->
 
 ## Services
-<!-- Add links to services/: [payments](services/payments.md) -->
+<!-- [payments](services/payments.md) — one-liner -->
 ```
 
-5. Write `okf/log.md`:
+### 5. Write `okf/log.md`
 
 ```markdown
 ---
 type: Log
 ---
-<ISO date> — initialized OKF knowledge base
+<today ISO date> — initialized OKF knowledge base
 ```
 
-6. Tell the user:
-   - What was created
-   - That they need to **start a new Claude Code session** for the context to be injected
-   - How to add their first concept: `okf/<type>/<name>.md` with `---\ntype: ...\n---`
-   - That `/mega-brain-migrate` can auto-populate from existing docs
+### 6. Tell the user
+
+- What was created
+- **Start a new Claude Code session** for context injection to activate
+- How to add the first concept: `/mega-brain:ingest` or create `okf/<type>/<name>.md` manually
+- If existing docs exist: `/mega-brain:migrate` can auto-populate from README, schemas, API specs
