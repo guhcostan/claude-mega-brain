@@ -212,10 +212,10 @@ Start a new Claude Code session — the knowledge base is loaded automatically.
 | `brain/` | short |
 | `.second-brain/` | thematic |
 
-### Adding concepts with `/mega-brain-ingest`
+### Adding concepts with `/mega-brain:ingest`
 
 ```
-/mega-brain-ingest
+/mega-brain:ingest
 ```
 
 Invoke the ingest skill to create or update OKF files from existing documentation, schemas, or API specs.

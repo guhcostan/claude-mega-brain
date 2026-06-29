@@ -1,5 +1,5 @@
 ---
-name: mega-brain-migrate
+name: migrate
 description: Scan the project and migrate existing documentation into OKF format. Use when the user wants to populate the okf/ directory from existing docs, README, schemas, API specs, runbooks, or any structured project knowledge. Triggers on "migrate to okf", "populate mega brain", "scan my docs", "convert docs to okf", "importar documentação", "migrar para okf", "popular o knowledge base".
 ---
 

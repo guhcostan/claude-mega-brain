@@ -1,5 +1,5 @@
 ---
-name: mega-brain-init
+name: init
 description: Initialize an OKF knowledge base in the current project. Use when the user wants to set up claude-mega-brain for the first time, when there is no okf/ directory yet, or when the user says "init mega brain", "create the knowledge base", "setup okf", or "inicializar o mega brain".
 ---
 

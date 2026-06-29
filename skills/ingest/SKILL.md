@@ -1,5 +1,5 @@
 ---
-name: mega-brain-ingest
+name: ingest
 description: Create or update OKF concept files from existing documentation. Use when the user wants to add a new concept to the project's knowledge base, convert existing docs into OKF format, or update stale OKF entries. Produces valid OKF markdown files with YAML frontmatter.
 ---
 
