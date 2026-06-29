@@ -14,7 +14,7 @@
 
 **100% accuracy · 0 tool calls · −91% tokens vs Obsidian+MCP**
 
-Real agentic sessions (`claude -p`). [Benchmark →](benchmarks/results/agentic-obsidian-vs-mega-brain.md)
+Real agentic sessions. [Benchmark →](benchmarks/results/agentic-obsidian-vs-mega-brain.md)
 
 </div>
 
@@ -70,7 +70,7 @@ Claude: amount_cents (INT64) — from tables/orders.md
 ## Benchmark
 
 6 questions with project-specific values unknowable from training data.
-Real `claude -p` agentic sessions — not simulated.
+Real agentic sessions — not simulated.
 
 ![Benchmark chart](assets/benchmark.svg)
 
