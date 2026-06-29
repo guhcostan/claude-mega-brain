@@ -1,9 +1,12 @@
-description: "claude-mega-brain vs baseline: does injected OKF context produce project-specific answers?"
+description: "claude-mega-brain vs baseline vs raw-dump (Aider-style): accuracy and token efficiency"
 
-# One Sonnet provider. Two prompts:
-#   baseline: plain question, no context
-#   mega-brain: knowledge base embedded in user message (simulates SessionStart hook injection)
-# Ground truths are fictional column names unknowable from training data.
+# Three prompts, same model:
+#   baseline:  no context (zero knowledge)
+#   raw-dump:  generic prose descriptions without exact schema (simulates Aider/naive context injection)
+#   mega-brain: curated OKF data dictionary with exact column names and types
+#
+# Ground truths are project-specific values unknowable from training data.
+# raw-dump intentionally omits the exact values to simulate "close but not exact" context.
 
 providers:
   - id: anthropic:messages:claude-sonnet-4-6
@@ -13,6 +16,7 @@ providers:
 
 prompts:
   - file://prompts/baseline.txt
+  - file://prompts/raw-dump.txt
   - file://prompts/mega-brain.txt
 
 defaultTest:
@@ -21,7 +25,7 @@ defaultTest:
       value: file://evaluators/token_usage.js
 
 tests:
-  - description: "amount_cents — not guessable from training data"
+  - description: "amount_cents — exact column name requires OKF"
     vars:
       question: "What column stores the order amount in the orders table, and what data type is it?"
       ground_truth: "amount_cents"
@@ -29,7 +33,7 @@ tests:
       - type: javascript
         value: file://evaluators/contains_truth.js
 
-  - description: "acme.com — specific exclusion filter"
+  - description: "acme.com — exact exclusion filter requires OKF"
     vars:
       question: "What email domain is excluded from the wau metric?"
       ground_truth: "acme.com"
@@ -37,7 +41,7 @@ tests:
       - type: javascript
         value: file://evaluators/contains_truth.js
 
-  - description: "refund_cents — deduction column"
+  - description: "refund_cents — exact deduction column requires OKF"
     vars:
       question: "What column is deducted from amount_cents when calculating net_revenue?"
       ground_truth: "refund_cents"
@@ -45,7 +49,7 @@ tests:
       - type: javascript
         value: file://evaluators/contains_truth.js
 
-  - description: "done — non-obvious status value"
+  - description: "done — exact status value requires OKF"
     vars:
       question: "What value of the status column indicates a finished order?"
       ground_truth: "done"
@@ -53,7 +57,7 @@ tests:
       - type: javascript
         value: file://evaluators/contains_truth.js
 
-  - description: "recent change — customers table"
+  - description: "recent change — only in OKF log.md"
     vars:
       question: "What was the most recent addition to the schema?"
       ground_truth: "customers"
@@ -61,7 +65,7 @@ tests:
       - type: javascript
         value: file://evaluators/contains_truth.js
 
-  - description: "join key — both should get this right"
+  - description: "join key — all should get this right"
     vars:
       question: "What column links the orders table to the customers table?"
       ground_truth: "customer_id"

@@ -75,14 +75,16 @@ Claude: Based on tables/orders.md — amount_cents (INT64).
 6 knowledge-retrieval questions over a fictional schema with project-specific column names.
 Correct answers require the injected context — not guessable from training data.
 
-| metric | baseline | mega-brain |
-|---|--:|--:|
-| accuracy | 23% | **100%** |
-| completion tokens avg | 119 | **34 (-71%)** |
-| latency avg | 4 238ms | **2 253ms (-47%)** |
+| metric | baseline | raw-dump (Aider-style) | **mega-brain** |
+|---|--:|--:|--:|
+| accuracy | 20% | 17% ❌ | **100%** |
+| completion tokens avg | 119 | 97 | **34 (-71%)** |
+| latency avg ms | 3 826 | 3 587 | **1 938 (-49%)** |
 
-Context overhead (+173 prompt tokens) is paid once per session at `SessionStart`.
-Model: Claude Sonnet 4.6 · n=30. [Full results](benchmarks/results/2026-06-29.md) · [Reproduce](benchmarks/)
+Raw-dump adds token overhead without accuracy gain — unstructured context creates noise.
+OKF's exact column names, types, and formulas are what drive 100% accuracy.
+
+Model: Claude Sonnet 4.6 · n=5 per cell. [Full results](benchmarks/results/2026-06-29-vs-competitors.md) · [Reproduce](benchmarks/)
 
 ---
 

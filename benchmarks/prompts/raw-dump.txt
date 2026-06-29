@@ -1,0 +1,22 @@
+Here are some project files that may be relevant:
+
+--- tables/orders.md ---
+# Orders Table
+This table stores order information for our e-commerce platform. Contains customer purchases.
+Common fields you might find: id, user_id, created_at, updated_at, status, total, items, shipping_address, payment_method, currency, discount_code, tax, subtotal, notes, fulfilled_at, cancelled_at.
+
+--- tables/customers.md ---
+# Customers Table
+Stores customer account information. Fields typically include: id, email, name, phone, address, country, city, zip, created_at, updated_at, stripe_customer_id, subscription_status, last_login_at, total_orders.
+
+--- metrics/wau.md ---
+# Weekly Active Users
+Standard engagement metric. Users who performed at least one action in the past 7 days. Usually calculated as COUNT(DISTINCT user_id) in the events/sessions table within the date range.
+
+--- metrics/net_revenue.md ---
+# Net Revenue
+Revenue after deductions. Typically SUM of order totals minus refunds, chargebacks, and discounts for a given period.
+
+---
+
+Answer this question based on the project files above: {{question}}
