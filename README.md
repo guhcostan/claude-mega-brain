@@ -262,7 +262,7 @@ Yes. `index.md` is optional — Claude navigates via the injected list and conce
 
 - [Open Knowledge Format — Google Cloud](https://cloud.google.com/blog/products/data-analytics/how-the-open-knowledge-format-can-improve-data-sharing)
 - [LLM Wiki pattern — Andrej Karpathy](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
-- [ponytail](https://github.com/DietrichGebert/ponytail) — inspiration for plugin structure
+- [Expanding Brain meme — Know Your Meme](https://knowyourmeme.com/memes/expanding-brain) — the plugin is named after this
 
 ---
 
