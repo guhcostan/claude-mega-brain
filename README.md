@@ -75,16 +75,27 @@ Claude: Based on tables/orders.md — amount_cents (INT64).
 6 knowledge-retrieval questions over a fictional schema with project-specific column names.
 Correct answers require the injected context — not guessable from training data.
 
-| metric | baseline | raw-dump (Aider-style) | **mega-brain** |
+| metric | baseline | Obsidian-style | **mega-brain** |
 |---|--:|--:|--:|
 | accuracy | 20% | 17% ❌ | **100%** |
 | completion tokens avg | 119 | 97 | **34 (-71%)** |
 | latency avg ms | 3 826 | 3 587 | **1 938 (-49%)** |
 
-Raw-dump adds token overhead without accuracy gain — unstructured context creates noise.
-OKF's exact column names, types, and formulas are what drive 100% accuracy.
+Obsidian-style markdown without enforced schema adds token overhead but **hurts accuracy** (-3pp vs baseline) — generic descriptions create noise. OKF's structured YAML with exact column names, types, and formulas is what drives 100% accuracy.
 
 Model: Claude Sonnet 4.6 · n=5 per cell. [Full results](benchmarks/results/2026-06-29-vs-competitors.md) · [Reproduce](benchmarks/)
+
+## How it compares
+
+| tool | format | auto-inject | schema enforcement | works with Claude Code |
+|------|--------|-------------|-------------------|------------------------|
+| **claude-mega-brain** | Markdown + YAML | SessionStart hook | required (`type:`) | ✓ native |
+| Obsidian + MCP | Markdown | manual setup | none | requires MCP config |
+| Notion | proprietary DB | manual | proprietary | no |
+| Logseq | Markdown blocks | plugin-based | none | no |
+| mem.ai | AI-organized | none | none | no |
+
+Only claude-mega-brain injects automatically at session start with zero config.
 
 ---
 

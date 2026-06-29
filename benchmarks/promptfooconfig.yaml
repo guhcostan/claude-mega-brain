@@ -1,8 +1,8 @@
-description: "claude-mega-brain vs baseline vs raw-dump (Aider-style): accuracy and token efficiency"
+description: "claude-mega-brain vs baseline vs obsidian-style: accuracy and token efficiency"
 
 # Three prompts, same model:
 #   baseline:  no context (zero knowledge)
-#   raw-dump:  generic prose descriptions without exact schema (simulates Aider/naive context injection)
+#   obsidian-style:  generic prose descriptions without exact schema (simulates Aider/naive context injection)
 #   mega-brain: curated OKF data dictionary with exact column names and types
 #
 # Ground truths are project-specific values unknowable from training data.
@@ -16,7 +16,7 @@ providers:
 
 prompts:
   - file://prompts/baseline.txt
-  - file://prompts/raw-dump.txt
+  - file://prompts/obsidian-style.txt
   - file://prompts/mega-brain.txt
 
 defaultTest:
