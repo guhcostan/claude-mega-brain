@@ -75,15 +75,18 @@ Claude: Based on tables/orders.md — amount_cents (INT64).
 6 knowledge-retrieval questions over a fictional schema with project-specific column names.
 Correct answers require the injected context — not guessable from training data.
 
-| metric | baseline | Obsidian-style | **mega-brain** |
-|---|--:|--:|--:|
-| accuracy | 20% | 17% ❌ | **100%** |
-| completion tokens avg | 119 | 97 | **34 (-71%)** |
-| latency avg ms | 3 826 | 3 587 | **1 938 (-49%)** |
+**Real agentic sessions** (`claude -p`, real tool calls):
 
-Obsidian-style markdown without enforced schema adds token overhead but **hurts accuracy** (-3pp vs baseline) — generic descriptions create noise. OKF's structured YAML with exact column names, types, and formulas is what drives 100% accuracy.
+| metric | Obsidian+MCP | **mega-brain** |
+|---|--:|--:|
+| accuracy | 17% | **100%** |
+| tool calls avg | 4.0 | **0** |
+| tokens avg | 175,461 | **16,025 (-91%)** |
+| latency avg ms | 17,298 | **3,543 (-80%)** |
 
-Model: Claude Sonnet 4.6 · n=5 per cell. [Full results](benchmarks/results/2026-06-29-vs-competitors.md) · [Reproduce](benchmarks/)
+Obsidian+MCP spends 4 tool calls and 175k tokens per question exploring the vault — then still gets the answer wrong because the notes lack exact schema values. mega-brain injects the structured OKF index once at `SessionStart` and answers directly.
+
+Model: Claude Sonnet 4.6. [Agentic results](benchmarks/results/agentic-obsidian-vs-mega-brain.md) · [Reproduce](benchmarks/)
 
 ## How it compares
 
