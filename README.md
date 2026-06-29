@@ -183,24 +183,29 @@ claude plugin install /path/to/claude-mega-brain
 
 ## Usage
 
-Create a knowledge base in your project:
+### Start from scratch
 
-```bash
-mkdir okf/
+```
+/mega-brain:init
 ```
 
-Add concepts:
+Creates `okf/index.md` and `okf/log.md`. Start a new session — context injects automatically.
 
-```markdown
-# okf/tables/orders.md
----
-type: BigQuery Table
-title: Orders
-description: One row per completed customer order.
----
+### Migrate existing docs
+
+```
+/mega-brain:migrate
 ```
 
-Start a new Claude Code session — the knowledge base is loaded automatically.
+Scans `openapi.yaml`, `schema.prisma`, `schema.sql`, `docs/`, `README` sections and generates OKF files from them.
+
+### Add a single concept
+
+```
+/mega-brain:ingest
+```
+
+Document a specific table, metric, API, or service from a schema dump, description, or URL.
 
 ### OKF directory names (first match wins)
 
@@ -210,15 +215,6 @@ Start a new Claude Code session — the knowledge base is loaded automatically.
 | `.okf/` | hidden, keeps root clean |
 | `knowledge/` | generic |
 | `brain/` | short |
-| `.second-brain/` | thematic |
-
-### Adding concepts with `/mega-brain:ingest`
-
-```
-/mega-brain:ingest
-```
-
-Invoke the ingest skill to create or update OKF files from existing documentation, schemas, or API specs.
 
 ---
 
