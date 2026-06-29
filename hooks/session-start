@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# SessionStart hook — scans project for OKF knowledge base and injects index as context.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ROOT="${PWD}"
+
+# Check .lore.json for a custom dir override
+CUSTOM_DIR=$(python3 -c "
+import json, sys
+try:
+    c = json.load(open('${PROJECT_ROOT}/.lore.json'))
+    print(c.get('dir', ''))
+except Exception:
+    print('')
+" 2>/dev/null || true)
+
+OKF_DIR=""
+OKF_NAME=""
+
+if [ -n "${CUSTOM_DIR}" ] && [ -d "${PROJECT_ROOT}/${CUSTOM_DIR}" ]; then
+    OKF_DIR="${PROJECT_ROOT}/${CUSTOM_DIR}"
+    OKF_NAME="${CUSTOM_DIR}"
+else
+    for candidate in ".lore" ".okf" "okf" "knowledge" ".second-brain" "brain"; do
+        if [ -d "${PROJECT_ROOT}/${candidate}" ]; then
+            OKF_DIR="${PROJECT_ROOT}/${candidate}"
+            OKF_NAME="${candidate}"
+            break
+        fi
+    done
+fi
+
+# No OKF dir found — silent exit
+if [ -z "${OKF_DIR}" ]; then
+    printf '{"continue": true, "suppressOutput": true}\n'
+    exit 0
+fi
+
+# Parse OKF and build compact index
+CONTEXT=$(python3 "${PLUGIN_ROOT}/scripts/parse-okf.py" "${OKF_DIR}" "${OKF_NAME}" "${PROJECT_ROOT}" 2>/dev/null) || {
+    printf '{"continue": true, "suppressOutput": true}\n'
+    exit 0
+}
+
+escape_for_json() {
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
+}
+
+PAYLOAD=$(printf '<lore>\n%s\n</lore>' "${CONTEXT}")
+ESCAPED=$(escape_for_json "${PAYLOAD}")
+
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+    printf '{"additional_context": "%s"}\n' "${ESCAPED}"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+    printf '{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s"}}\n' "${ESCAPED}"
+else
+    printf '{"additionalContext": "%s"}\n' "${ESCAPED}"
+fi
+
+exit 0

@@ -1,0 +1,10 @@
+{
+  "name": "claude-mega-brain",
+  "version": "0.1.0",
+  "description": "OKF-powered knowledge context for Claude Code — loads your project's lore at every session",
+  "keywords": ["pi-package", "skills", "okf", "knowledge", "lore", "mega-brain"],
+  "license": "MIT",
+  "pi": {
+    "skills": ["./skills"]
+  }
+}

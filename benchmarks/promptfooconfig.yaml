@@ -1,0 +1,65 @@
+description: "claude-mega-brain vs baseline: does injected OKF context produce project-specific answers?"
+
+# One Sonnet provider. Two prompts:
+#   baseline: plain question, no context
+#   mega-brain: knowledge base embedded in user message (simulates SessionStart hook injection)
+# Ground truths are fictional column names unknowable from training data.
+
+providers:
+  - id: anthropic:messages:claude-sonnet-4-6
+    config:
+      max_tokens: 128
+      temperature: 0
+
+prompts:
+  - file://prompts/baseline.txt
+  - file://prompts/mega-brain.txt
+
+tests:
+  - description: "amount_cents — not guessable from training data"
+    vars:
+      question: "What column stores the order amount in the orders table, and what data type is it?"
+      ground_truth: "amount_cents"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "acme.com — specific exclusion filter"
+    vars:
+      question: "What email domain is excluded from the wau metric?"
+      ground_truth: "acme.com"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "refund_cents — deduction column"
+    vars:
+      question: "What column is deducted from amount_cents when calculating net_revenue?"
+      ground_truth: "refund_cents"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "done — non-obvious status value"
+    vars:
+      question: "What value of the status column indicates a finished order?"
+      ground_truth: "done"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "recent change — customers table"
+    vars:
+      question: "What was the most recent addition to the schema?"
+      ground_truth: "customers"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "join key — both should get this right"
+    vars:
+      question: "What column links the orders table to the customers table?"
+      ground_truth: "customer_id"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
