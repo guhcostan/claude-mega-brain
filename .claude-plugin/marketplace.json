@@ -1,0 +1,15 @@
+{
+  "name": "mega-brain-local",
+  "owner": {
+    "name": "Gustavo Costa",
+    "url": "https://github.com/guhcostan"
+  },
+  "plugins": [
+    {
+      "name": "mega-brain",
+      "source": "./",
+      "description": "OKF-powered knowledge context for Claude Code",
+      "version": "0.2.1"
+    }
+  ]
+}
