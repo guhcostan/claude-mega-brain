@@ -1,12 +1,12 @@
-description: "claude-mega-brain vs baseline vs obsidian-style: accuracy and token efficiency"
+description: "claude-mega-brain vs baseline vs obsidian-style vs claude-md: accuracy and token efficiency"
 
-# Three prompts, same model:
-#   baseline:  no context (zero knowledge)
-#   obsidian-style:  generic prose descriptions without exact schema (simulates Aider/naive context injection)
-#   mega-brain: curated OKF data dictionary with exact column names and types
+# Four prompts, same model:
+#   baseline:      no context (zero knowledge)
+#   obsidian-style: generic prose descriptions without exact schema
+#   claude-md:     raw OKF files dumped as context (simulates CLAUDE.md + additionalDirectories)
+#   mega-brain:    curated OKF data dictionary with exact column names and types
 #
 # Ground truths are project-specific values unknowable from training data.
-# raw-dump intentionally omits the exact values to simulate "close but not exact" context.
 
 providers:
   - id: anthropic:messages:claude-sonnet-4-6
@@ -26,10 +26,11 @@ defaultTest:
       value: file://evaluators/token_usage.js
 
 tests:
-  - description: "amount_cents — exact column name requires OKF"
+  # ── Simple lookups ────────────────────────────────────────────────────────
+  - description: "total_cents — exact column name requires OKF"
     vars:
       question: "What column stores the order amount in the orders table, and what data type is it?"
-      ground_truth: "amount_cents"
+      ground_truth: "total_cents"
     assert:
       - type: javascript
         value: file://evaluators/contains_truth.js
@@ -44,7 +45,7 @@ tests:
 
   - description: "refund_cents — exact deduction column requires OKF"
     vars:
-      question: "What column is deducted from amount_cents when calculating net_revenue?"
+      question: "What column is deducted from total_cents when calculating net_revenue?"
       ground_truth: "refund_cents"
     assert:
       - type: javascript
@@ -70,6 +71,39 @@ tests:
     vars:
       question: "What column links the orders table to the customers table?"
       ground_truth: "customer_id"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  # ── Complex / multi-hop ───────────────────────────────────────────────────
+  - description: "log date — exact date from log.md requires OKF"
+    vars:
+      question: "On what date was the customers table added to the project?"
+      ground_truth: "2026-06-29"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "currency — detail from metric notes requires OKF"
+    vars:
+      question: "What currency is the net revenue metric denominated in?"
+      ground_truth: "USD"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "group by country — multi-hop: orders + customers join"
+    vars:
+      question: "To calculate net revenue broken down by customer country, which column would you GROUP BY and from which table?"
+      ground_truth: "country"
+    assert:
+      - type: javascript
+        value: file://evaluators/contains_truth.js
+
+  - description: "test orders excluded — detail in metric notes requires OKF"
+    vars:
+      question: "Are test orders included or excluded when calculating net revenue?"
+      ground_truth: "xclu"
     assert:
       - type: javascript
         value: file://evaluators/contains_truth.js

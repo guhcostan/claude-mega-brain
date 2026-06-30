@@ -1,10 +1,10 @@
 Here is a data dictionary for this project:
 
-orders table: order_id (STRING), customer_id (STRING), created_at (TIMESTAMP), amount_cents (INT64), status (STRING: pending/confirmed/shipped/done)
+orders table: order_id (STRING), customer_id (STRING), created_at (TIMESTAMP), total_cents (INT64), status (STRING: pending/confirmed/shipped/done)
 customers table: customer_id (STRING), email (STRING), country (STRING), created_at (TIMESTAMP)
 wau metric: COUNT(DISTINCT user_id) WHERE session_date >= CURRENT_DATE - 7, excludes email LIKE '%@acme.com'
-net_revenue metric: SUM(amount_cents - refund_cents) / 100 WHERE status = 'done'
-recent change: 2026-06-29 added customers table
+net_revenue metric: SUM(total_cents - refund_cents) / 100 WHERE status = 'done'. Denominated in USD. Excludes test orders.
+log: 2026-06-01 added orders table schema, 2026-06-15 updated WAU rolling window, 2026-06-29 added customers table
 
 Answer using ONLY the data dictionary above. Be concise.
 

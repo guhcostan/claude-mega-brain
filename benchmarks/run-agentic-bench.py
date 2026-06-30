@@ -6,12 +6,18 @@ Runs real claude -p sessions, counts turns/tool-calls, measures accuracy.
 import subprocess, json, os, sys, time, tempfile
 
 QUESTIONS = [
-    {"id": "amount_cents",  "q": "What column stores the order amount in the orders table, and what data type is it?", "truth": "amount_cents"},
+    # simple lookups
+    {"id": "total_cents",   "q": "What column stores the order amount in the orders table, and what data type is it?", "truth": "total_cents"},
     {"id": "acme_exclusion","q": "What email domain is excluded from the WAU metric?", "truth": "acme.com"},
-    {"id": "refund_cents",  "q": "What column is deducted from amount_cents when calculating net_revenue?", "truth": "refund_cents"},
+    {"id": "refund_cents",  "q": "What column is deducted from total_cents when calculating net_revenue?", "truth": "refund_cents"},
     {"id": "done_status",   "q": "What value of the status column indicates a finished order?", "truth": "done"},
     {"id": "recent_change", "q": "What was the most recent addition to the knowledge base?", "truth": "customers"},
     {"id": "join_key",      "q": "What column links the orders table to the customers table?", "truth": "customer_id"},
+    # complex / multi-hop
+    {"id": "log_date",      "q": "On what date was the customers table added to the project?", "truth": "2026-06-29"},
+    {"id": "currency",      "q": "What currency is the net revenue metric denominated in?", "truth": "USD"},
+    {"id": "group_country", "q": "To calculate net revenue broken down by customer country, which column would you GROUP BY and from which table?", "truth": "country"},
+    {"id": "test_orders",   "q": "Are test orders included or excluded when calculating net revenue?", "truth": "xclu"},
 ]
 
 VAULT_PATH = "/tmp/obsidian-vault"
@@ -29,11 +35,11 @@ LORE_CONTEXT = """<lore>
 Lore: ./okf/ (5 concepts)
 Read index.md first, then follow links.
 
-  tables/orders.md [BigQuery Table] — order_id STRING, customer_id STRING, created_at TIMESTAMP, amount_cents INT64, status STRING (pending/confirmed/shipped/done). Join to customers on customer_id.
+  tables/orders.md [BigQuery Table] — order_id STRING, customer_id STRING, created_at TIMESTAMP, total_cents INT64, status STRING (pending/confirmed/shipped/done). Join to customers on customer_id.
   tables/customers.md [BigQuery Table] — customer_id STRING, email STRING, country STRING, created_at TIMESTAMP
   metrics/wau.md [Metric] — COUNT(DISTINCT user_id) WHERE session_date >= CURRENT_DATE-7, excludes email LIKE '%@acme.com'
-  metrics/net_revenue.md [Metric] — SUM(amount_cents - refund_cents)/100 WHERE status='done'
-  log.md — 2026-06-29: added customers table
+  metrics/net_revenue.md [Metric] — SUM(total_cents - refund_cents)/100 WHERE status='done'. Denominated in USD. Excludes test orders.
+  log.md — 2026-06-01: orders schema, 2026-06-15: WAU rolling window, 2026-06-29: customers table
 </lore>"""
 
 CLAUDE_MD_CONTEXT = """The following project files have been loaded via additionalDirectories:

@@ -23,14 +23,14 @@ npx promptfoo@latest view
 
 | Condition | Accuracy | Tokens avg |
 |---|---|---|
-| raw (no context) | 20% | 139 |
-| obsidian-style | 0% | 406 |
-| CLAUDE.md (raw files) | 83% | 406 |
-| **mega-brain (OKF)** | **100%** | **226** |
+| raw (no context) | 50% | 138 |
+| obsidian-style | 13% | 408 |
+| CLAUDE.md (raw files) | 100% | 400 |
+| **mega-brain (OKF)** | **100%** | **266** |
 
-Obsidian-style scores 0% because vague descriptions don't contain exact column names or values.
-CLAUDE.md raw files score 83% — misses questions requiring knowledge of exact column names not
-present in the raw OKF content. mega-brain scores 100% with fewer tokens than CLAUDE.md.
+Raw and obsidian-style fail project-specific questions (exact column names, log dates, exclusion
+rules). CLAUDE.md and mega-brain both achieve 100% — but mega-brain uses 33% fewer tokens
+thanks to its compressed structured index vs raw file dump.
 
 ## Agentic Benchmark (real Claude Code sessions)
 
@@ -43,14 +43,16 @@ python3 run-agentic-bench.py
 
 | Condition | Accuracy | Tool calls | Turns | Tokens avg | Latency avg |
 |---|---|---|---|---|---|
-| raw (no context) | 83% | 1.5 | 3.2 | 76,511 | 10,026ms |
-| obsidian+MCP | 83% | 1.8 | 2.8 | 84,731 | 10,578ms |
-| CLAUDE.md (raw files) | 83% | 0.0 | 1.0 | 16,551 | 4,746ms |
-| **mega-brain (OKF)** | **100%** | **0.0** | **1.0** | **16,526** | **4,114ms** |
+| raw (no context) | 100%† | 1.1 | 2.6 | 61,521 | 10,267ms |
+| obsidian+MCP | 100%† | 0.9 | 2.1 | 49,186 | 10,986ms |
+| CLAUDE.md (raw files) | 100% | 0.1 | 1.2 | 20,624 | 5,494ms |
+| **mega-brain (OKF)** | **100%** | **0.0** | **1.0** | **16,547** | **4,384ms** |
 
-mega-brain is the only condition to hit 100% accuracy. CLAUDE.md (raw files) matches it on
-tool calls, turns, and tokens — but falls short on the question requiring structured navigation
-to locate exact schema values.
+† raw and Obsidian+MCP reach 100% by using tool calls — spending 3× more tokens and time.
+Without tools they drop to 50% and 13% respectively (see promptfoo benchmark above).
+
+CLAUDE.md and mega-brain both answer in 1 turn with 0 tool calls. mega-brain uses 20% fewer
+tokens and is 20% faster due to the compressed structured index.
 
 ## Token Cost Benchmark (vs CLAUDE.md + prompt caching)
 

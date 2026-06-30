@@ -12,7 +12,7 @@
 [![License](https://img.shields.io/badge/license-MIT-111111?style=flat-square)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/works%20with-Claude%20Code-111111?style=flat-square)](https://github.com/anthropics/claude-code)
 
-**100% accuracy · 0 tool calls · −81% tokens vs Obsidian+MCP**
+**100% accuracy · 0 tool calls · −66% tokens vs Obsidian+MCP**
 
 Real agentic sessions. [Benchmark →](benchmarks/results/agentic-obsidian-vs-mega-brain.md)
 
@@ -77,12 +77,15 @@ Real agentic sessions — not simulated.
 
 | metric | no context | Obsidian+MCP | CLAUDE.md (raw files) | **claude-mega-brain** |
 |---|--:|--:|--:|--:|
-| accuracy | 83% | 83% | 83% | **100%** |
-| tool calls avg | 1.5 | 1.8 | 0 | **0** |
-| tokens avg | 76,511 | 84,731 | 16,551 | **16,526** |
-| latency avg ms | 10,026 | 10,578 | 4,746 | **4,114** |
+| accuracy (no tools) | 50% | 13% | 100% | **100%** |
+| accuracy (agentic) | 100%† | 100%† | 100% | **100%** |
+| tool calls avg | 1.1 | 0.9 | 0.1 | **0** |
+| tokens avg | 61,521 | 49,186 | 20,624 | **16,547** |
+| latency avg ms | 10,267 | 10,986 | 5,494 | **4,384** |
 
-CLAUDE.md (raw files) matches mega-brain on tool calls and tokens — but misses the question requiring structured navigation to locate exact schema values. mega-brain is the only condition to hit 100% accuracy.
+† raw and Obsidian+MCP reach 100% agentic accuracy by using tool calls to explore the project — spending 3–4× more tokens and time. Without tools, they drop to 50% and 13%.
+
+CLAUDE.md (raw files) matches mega-brain on accuracy but uses 25% more tokens and is 25% slower. mega-brain's compressed OKF index is smaller and faster — the gap widens as knowledge bases grow.
 
 [Full results](benchmarks/results/agentic-obsidian-vs-mega-brain.md) · [Reproduce](benchmarks/)
 
