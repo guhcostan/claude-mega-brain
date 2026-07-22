@@ -1,12 +1,32 @@
 #!/usr/bin/env bash
 
+is_compatible_version() {
+    local version_output="$1"
+    local major
+    local minor
+
+    if [[ "${version_output}" =~ Python[[:space:]]+([0-9]+)\.([0-9]+) ]]; then
+        major="${BASH_REMATCH[1]}"
+        minor="${BASH_REMATCH[2]}"
+        if [ "${major}" -gt 3 ] || { [ "${major}" -eq 3 ] && [ "${minor}" -ge 6 ]; }; then
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
 for candidate in python3 python; do
-    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" --version >/dev/null; then
+    if command -v "${candidate}" >/dev/null 2>&1 \
+        && version_output=$("${candidate}" --version 2>&1) \
+        && is_compatible_version "${version_output}"; then
         exec "${candidate}" "$@"
     fi
 done
 
-if command -v py >/dev/null 2>&1 && py -3 --version >/dev/null; then
+if command -v py >/dev/null 2>&1 \
+    && version_output=$(py -3 --version 2>&1) \
+    && is_compatible_version "${version_output}"; then
     exec py -3 "$@"
 fi
 

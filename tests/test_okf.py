@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -233,6 +234,9 @@ class TestRunPython(unittest.TestCase):
         self.bin_dir = os.path.join(self.tmp, 'bin')
         os.makedirs(self.bin_dir)
         self.helper = os.path.join(HOOKS_DIR, 'run-python')
+        self.bash = shutil.which('bash')
+        if self.bash is None:
+            self.skipTest('Bash is required to execute hooks/run-python')
 
     def write_executable(self, name, content):
         path = os.path.join(self.bin_dir, name)
@@ -244,7 +248,7 @@ class TestRunPython(unittest.TestCase):
         env = dict(os.environ)
         env['PATH'] = self.bin_dir
         return subprocess.run(
-            ['/bin/bash', self.helper, *args],
+            [self.bash, self.helper, *args],
             capture_output=True,
             text=True,
             env=env,
@@ -252,13 +256,36 @@ class TestRunPython(unittest.TestCase):
 
     def test_ignores_broken_python3_and_uses_python(self):
         self.write_executable('python3', '#!/bin/sh\nexit 1\n')
-        self.write_executable('python', '#!/bin/sh\nif [ "$1" = "--version" ]; then\n  printf "Python fallback\\n"\n  exit 0\nfi\nprintf "python-fallback\\n"\n')
+        self.write_executable('python', '#!/bin/sh\nif [ "$1" = "--version" ]; then\n  printf "Python 3.12.0\\n"\n  exit 0\nfi\nprintf "python-fallback\\n"\n')
 
         result = self.run_helper(['-c', 'ignored'])
 
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, 'python-fallback\n')
         self.assertEqual(result.stderr, '')
+
+    def test_skips_incompatible_python_and_uses_py3_launcher(self):
+        self.write_executable('py', '#!/bin/sh\nif [ "$1" = "-3" ] && [ "$2" = "--version" ]; then\n  printf "Python 3.12.0\\n"\n  exit 0\nfi\nif [ "$1" = "-3" ]; then\n  shift\nfi\nprintf "py3-fallback\\n"\n')
+
+        for version, output_stream in (
+            ('Python 2.7.18', 'stdout'),
+            ('Python 3.5.10', 'stderr'),
+        ):
+            with self.subTest(version=version):
+                version_output = (
+                    f'printf "{version}\\n"'
+                    if output_stream == 'stdout'
+                    else f'printf "{version}\\n" >&2'
+                )
+                self.write_executable(
+                    'python',
+                    f'#!/bin/sh\nif [ "$1" = "--version" ]; then\n  {version_output}\n  exit 0\nfi\nprintf "python-incompatible\\n"\n',
+                )
+
+                result = self.run_helper(['-c', 'ignored'])
+
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, 'py3-fallback\n')
 
     def test_reports_error_when_no_python_interpreter_works(self):
         result = self.run_helper(['-c', 'ignored'])
