@@ -226,6 +226,14 @@ class TestHookConfiguration(unittest.TestCase):
         self.assertIn('/plugin install mega-brain@mega-brain', release)
         self.assertNotIn('/plugin install mega-brain@guhcostan', release)
 
+    def test_windows_wrapper_reports_missing_bash(self):
+        wrapper = self.read_text('hooks/run-hook.cmd')
+        no_bash_block = wrapper.split('where bash >nul 2>nul', 1)[1].split('CMDBLOCK', 1)[0]
+        self.assertRegex(
+            no_bash_block,
+            r'echo run-hook\.cmd: Bash not found.*>&2\s+exit /b 1',
+        )
+
 
 class TestRunPython(unittest.TestCase):
     def setUp(self):

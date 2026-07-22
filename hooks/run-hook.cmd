@@ -26,7 +26,8 @@ if %ERRORLEVEL% equ 0 (
     exit /b %ERRORLEVEL%
 )
 
-exit /b 0
+echo run-hook.cmd: Bash not found; install Git for Windows or add bash to PATH >&2
+exit /b 1
 CMDBLOCK
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
