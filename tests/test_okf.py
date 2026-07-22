@@ -191,5 +191,81 @@ class TestInjectLinks(unittest.TestCase):
         self.assertIn('"continue": true', out)
 
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+HOOKS_DIR = os.path.join(REPO_ROOT, 'hooks')
+
+
+class TestHookConfiguration(unittest.TestCase):
+    def read_text(self, rel_path):
+        with open(os.path.join(REPO_ROOT, rel_path), encoding='utf-8') as file:
+            return file.read()
+
+    def test_manifest_does_not_redeclare_hooks(self):
+        with open(os.path.join(REPO_ROOT, '.claude-plugin', 'plugin.json'), encoding='utf-8') as file:
+            manifest = json.load(file)
+        self.assertNotIn('hooks', manifest)
+
+    def test_post_tool_use_runs_wrapper_then_python_helper(self):
+        with open(os.path.join(HOOKS_DIR, 'hooks.json'), encoding='utf-8') as file:
+            hooks = json.load(file)
+        command = hooks['hooks']['PostToolUse'][0]['hooks'][0]['command']
+        self.assertRegex(
+            command,
+            r'run-hook\.cmd"\s+run-python\s+"\$\{CLAUDE_PLUGIN_ROOT\}/scripts/inject-links\.py"',
+        )
+        self.assertNotIn('python3', command)
+
+    def test_session_start_uses_python_helper_without_hiding_stderr(self):
+        session_start = self.read_text('hooks/session-start')
+        self.assertIn('run-python', session_start)
+        self.assertNotIn('2>/dev/null', session_start)
+
+    def test_release_uses_current_marketplace_name(self):
+        release = self.read_text('.github/workflows/release.yml')
+        self.assertIn('/plugin install mega-brain@mega-brain', release)
+        self.assertNotIn('/plugin install mega-brain@guhcostan', release)
+
+
+class TestRunPython(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__('shutil').rmtree(self.tmp, ignore_errors=True))
+        self.bin_dir = os.path.join(self.tmp, 'bin')
+        os.makedirs(self.bin_dir)
+        self.helper = os.path.join(HOOKS_DIR, 'run-python')
+
+    def write_executable(self, name, content):
+        path = os.path.join(self.bin_dir, name)
+        with open(path, 'w', encoding='utf-8') as file:
+            file.write(content)
+        os.chmod(path, 0o755)
+
+    def run_helper(self, args):
+        env = dict(os.environ)
+        env['PATH'] = self.bin_dir
+        return subprocess.run(
+            ['/bin/bash', self.helper, *args],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+
+    def test_ignores_broken_python3_and_uses_python(self):
+        self.write_executable('python3', '#!/bin/sh\nexit 1\n')
+        self.write_executable('python', '#!/bin/sh\nif [ "$1" = "--version" ]; then\n  printf "Python fallback\\n"\n  exit 0\nfi\nprintf "python-fallback\\n"\n')
+
+        result = self.run_helper(['-c', 'ignored'])
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, 'python-fallback\n')
+        self.assertEqual(result.stderr, '')
+
+    def test_reports_error_when_no_python_interpreter_works(self):
+        result = self.run_helper(['-c', 'ignored'])
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('run-python: no working Python interpreter found', result.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()

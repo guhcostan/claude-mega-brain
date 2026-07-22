@@ -12,6 +12,5 @@
   "repository": "https://github.com/guhcostan/claude-mega-brain",
   "license": "MIT",
   "keywords": ["okf", "knowledge", "context", "second-brain", "mega-brain"],
-  "skills": "./skills",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills"
 }

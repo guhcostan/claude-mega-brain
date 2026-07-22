@@ -27,7 +27,7 @@ jobs:
             Install via Claude Code:
             ```
             /plugin marketplace add guhcostan/claude-mega-brain
-            /plugin install mega-brain@guhcostan
+            /plugin install mega-brain@mega-brain
             ```
 
             See [CHANGELOG.md](CHANGELOG.md) for details.

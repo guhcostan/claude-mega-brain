@@ -9,7 +9,7 @@ PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECT_ROOT="${CLAUDE_PROJECT_DIR:-${PWD}}"
 
 # Build knowledge index from project root
-CONTEXT=$(python3 "${PLUGIN_ROOT}/scripts/parse-okf.py" "${PROJECT_ROOT}" 2>/dev/null) || {
+CONTEXT=$("${SCRIPT_DIR}/run-python" "${PLUGIN_ROOT}/scripts/parse-okf.py" "${PROJECT_ROOT}") || {
     printf '{"continue": true, "suppressOutput": true}\n'
     exit 0
 }

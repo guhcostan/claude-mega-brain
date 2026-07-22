@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+for candidate in python3 python; do
+    if command -v "${candidate}" >/dev/null 2>&1 && "${candidate}" --version >/dev/null; then
+        exec "${candidate}" "$@"
+    fi
+done
+
+if command -v py >/dev/null 2>&1 && py -3 --version >/dev/null; then
+    exec py -3 "$@"
+fi
+
+printf 'run-python: no working Python interpreter found (tried python3, python, py -3)\n' >&2
+exit 1
