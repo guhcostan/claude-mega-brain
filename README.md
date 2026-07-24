@@ -11,6 +11,7 @@
 [![Release](https://img.shields.io/github/v/release/guhcostan/claude-mega-brain?style=flat-square&color=111111&label=release)](https://github.com/guhcostan/claude-mega-brain/releases)
 [![License](https://img.shields.io/badge/license-MIT-111111?style=flat-square)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/works%20with-Claude%20Code-111111?style=flat-square)](https://github.com/anthropics/claude-code)
+[![BundleDex](https://bundledex.net/badge/claude-mega-brain.svg?style=flat-square)](https://bundledex.net/bundles/claude-mega-brain/)
 
 **100% accuracy · 0 tool calls · −66% tokens vs Obsidian+MCP**
 
@@ -271,6 +272,7 @@ Set `maxConcepts` in `.mega-brain.json`. The index stays compact; `index.md` hol
 
 ---
 
+[![OKF BundleDex](https://bundledex.net/static-badge.svg)](https://bundledex.net)
 ## License
 
 [MIT](LICENSE) — The shortest license that works.
